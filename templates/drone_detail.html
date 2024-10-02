@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="ru">
+<div class="sidebar-container">
+    <!-- Sidebar Menu -->
+    <nav class="sidebar">
+        <ul>
+            <li><a href="/home">Dashboard</a></li>
+        </ul>
+    </nav>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Панель управления</title>
+        <link rel="stylesheet" href="../static/css/styles.css" type="text/css">
+
+        <style>
+        /* Flexbox container for vertical stacking */
+        .container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            padding: 20px;
+        }
+
+        /* Each panel takes up half the viewport height */
+        .settings-panel-container {
+            flex: 1;
+            border: 1px solid #ccc;
+            padding: 20px;
+            margin-bottom: 10px;
+            width: calc(100% - 270px);
+        }
+
+        /* Optional styles for buttons */
+        .settings-panel-form button {
+            margin-right: 10px;
+            padding: 10px 20px;
+        }
+
+        /* Telemetry box styling */
+        .telemetry {
+            border: 1px solid #ccc;
+            padding: 20px;
+            height: 200px;
+            background-color: #f4f4f4;
+        }
+        </style>
+        <script>
+            // Check for token in localStorage
+            const token = localStorage.getItem('authToken');
+            if (!token) {
+                // If token is missing, redirect to login page
+                alert('Токен не найден! Выполните авторизацию.');
+                window.location.href = '/login'; // Redirect to login page
+            } else {
+                // Optionally, you can validate the token further, like checking its expiry
+                console.log('Токен найден:', token);
+            };
+
+
+        </script>
+        <script>
+        // Функция для взлета дрона
+        function takeoff() {
+            if (!token) {
+                alert('Сначала выполните авторизацию');
+                return;
+            }
+
+            fetch('/takeoff', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ id: {{ drone.id }}, altitude: 100 })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.msg === "Token has expired") {
+                    // Redirect to login page if the token has expired
+                    alert('Сессия истекла, выполните вход заново');
+                    window.location.href = '/';  // Redirect to the login page
+                } else {
+                    alert(data.message);  // Handle other responses
+                }
+            })
+            .catch(error => {
+                console.error('Ошибка:', error)
+                alert(data.error)
+            });
+        }
+
+        // Функция для посадки дрона
+        function land() {
+            if (!token) {
+                alert('Сначала выполните авторизацию');
+                return;
+            }
+
+            fetch('/land', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ id: {{ drone.id }}, altitude: 0 })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.msg === "Token has expired") {
+                    // Redirect to login page if the token has expired
+                    alert('Сессия истекла, выполните вход заново');
+                    window.location.href = '/';  // Redirect to the login page
+                } else {
+                    alert(data.message);  // Handle other responses
+                }
+            })
+            .catch(error => console.error('Ошибка:', error));
+        }
+
+        // Функция для начала миссии
+        function startMission(mission) {
+            if (!token) {
+                alert('Сначала выполните авторизацию');
+                return;
+            }
+
+            fetch('/mission', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ id: {{ drone.id }}, mission: mission })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.msg === "Token has expired") {
+                    // Redirect to login page if the token has expired
+                    alert('Сессия истекла, выполните вход заново');
+                    window.location.href = '/';  // Redirect to the login page
+                } else {
+                    alert(data.message);  // Handle other responses
+                }
+            })
+            .catch(error => console.error('Ошибка:', error));
+        }
+
+        // Функция для получения телеметрии дрона через сервер
+        function getTelemetry() {
+            if (!token) {
+                alert('Сначала выполните авторизацию');
+                return;
+            }
+
+            fetch('/get_drone_telemetry/{{ drone.id }}', {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.msg === "Token has expired") {
+                    // Redirect to login page if the token has expired
+                    alert('Сессия истекла, выполните вход заново');
+                    window.location.href = '/';  // Redirect to the login page
+                } else {
+                    const telemetryDiv = document.getElementById('telemetry');
+                    telemetryDiv.innerHTML = '<h3>Телеметрические данные:</h3><pre>' + JSON.stringify(data, null, 2) + '</pre>';
+                }
+            })
+            .catch(error => console.error('Ошибка получения телеметрии:', error));
+        }
+        </script>
+    </head>
+    <body>
+
+    <div class="container">
+        <!-- First panel: Drone controls -->
+        <div class="settings-panel-container">
+            <h1>Управление дроном id: {{ drone.id }} - {{drone.serial_number }}</h1>
+            <div class="table-container">
+                <table class="styled-table">
+                    <!-- Drone details can go here -->
+                </table>
+                <form class="settings-panel-form">
+                    <button type="button" onclick="takeoff()">Взлет</button>
+                    <button type="button" onclick="land()">Посадка</button>
+                    <br>
+                    <br>
+                    <br>
+                    <button type="button" onclick="startMission('Recon')">Миссия разведки</button>
+                    <button type="button" onclick="startMission('Patrol')">Миссия патрулирования</button>
+                    <button type="button" onclick="getTelemetry()">Получить телеметрию</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Second panel: Telemetry display -->
+        <div class="settings-panel-container">
+            <h1>Отображение телеметрии дрона id: {{drone.id}} - {{drone.serial_number}}</h1>
+            <div id="telemetry" class="telemetry">
+                Телеметрия будет отображаться здесь
+            </div>
+        </div>
+    </div>
+    </body>
+</div>
+</html>

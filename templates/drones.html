@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="ru">
+<div class="sidebar-container">
+    <!-- Sidebar Menu -->
+    <nav class="sidebar">
+        <ul>
+            <li><a href="/home">Dashboard</a></li>
+        </ul>
+    </nav>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Панель управления</title>
+        <link rel="stylesheet" href="../static/css/styles.css" type="text/css">
+    </head>
+    <body>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            // Check for token in localStorage
+            const token = localStorage.getItem('authToken');
+            if (!token) {
+                // If token is missing, redirect to login page
+                alert('Токен не найден! Выполните авторизацию.');
+                window.location.href = '/login'; // Redirect to login page
+            } else {
+                // Optionally, you can validate the token further, like checking its expiry
+                console.log('Токен найден:', token);
+            }
+        });
+    </script>
+    <script>
+        // Функция для создания нового дрона
+        function add_drone() {
+            const token = localStorage.getItem('authToken');
+
+            if (!token) {
+                alert('Сначала выполните авторизацию');
+                return;
+            }
+            const serial_number = document.getElementById("serial_number").value;
+            const port = document.getElementById("port").value;
+
+            fetch('/drones/add', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ port: port, serial_number: serial_number })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.msg === "Token has expired") {
+                    // Redirect to login page if the token has expired
+                    alert('Сессия истекла, выполните вход заново');
+                    window.location.href = '/';  // Redirect to the login page
+                } else {
+                    alert('Drone successfully created!');
+                }
+            })
+            .catch(error => {
+            console.error('Ошибка:', error)
+            });
+        }
+    </script>
+    </body>
+    <div class="settings-panel-container">
+        <h1>Панель управления</h1>
+
+        <div class="table-container">
+            <h2>Добавить дрон</h2>
+            <table class="styled-table">
+                <tbody>
+                <!-- Loop through a list of users -->
+                <tr>
+                    <input type="text" id="serial_number" placeholder="Серийный номер" required>
+                    <input type="text" id="port" placeholder="Порт для подключения" required>
+                </tr>
+                </tbody>
+            </table>
+            <form class="settings-panel-form">
+                <button onclick="add_drone()" type="button">Добавить дрон</button>
+            </form>
+        </div>
+    </div>
+</div>
+</html>

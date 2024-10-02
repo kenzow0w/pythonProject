@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Page</title>
+    <link rel="stylesheet" href="../static/css/styles.css" type="text/css">
+</head>
+<div class="login-page-container">
+    <div class="login-container">
+        <h2>Authorization</h2>
+        <form id="login-form" class="login-form">
+            <input type="text" id="username" placeholder="Username" required>
+            <input type="password" id="password" placeholder="Password" required>
+            <button type="submit">Login</button>
+        </form>
+    </div>
+</div>
+
+
+<script>
+        let token = null;
+
+        // Авторизация пользователя и сохранение токена на сервере
+        document.getElementById("login-form").addEventListener("submit", function(event) {
+            event.preventDefault();
+
+            const username = document.getElementById("username").value;
+            const password = document.getElementById("password").value;
+
+            fetch('/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ username: username, password: password })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.token) {
+                    token = data.token;
+                    localStorage.setItem('authToken', token);
+                    console.log('Токен сохранен на сервере:', token);
+                    alert('Login successful!');
+                    window.location.href = '/home';
+                } else {
+                    alert('Ошибка авторизации');
+                }
+            })
+            .catch(error => console.error('Ошибка:', error));
+        });
+</script>
+</html>
